@@ -1,5 +1,7 @@
 package com.example.passin.domain.attendee;
 
+import java.time.LocalDateTime;
+
 import com.example.passin.domain.event.Event;
 
 import jakarta.persistence.Column;
@@ -38,5 +40,5 @@ public class Attendee {
   private Event event;
 
   @Column(name = "created_at")
-  private String createdAt;
+  private LocalDateTime createdAt;
 }

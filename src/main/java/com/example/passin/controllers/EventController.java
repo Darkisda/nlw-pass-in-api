@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.example.passin.dto.attendee.AttendeesListResponseDTO;
 import com.example.passin.dto.event.EventIdDTO;
 import com.example.passin.dto.event.EventRequestDTO;
 import com.example.passin.dto.event.EventResponseDTO;
+import com.example.passin.services.AttendeeService;
 import com.example.passin.services.EventService;
 
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EventController {
   private final EventService service;
+  private final AttendeeService attendeeService;
 
   @GetMapping
   public ResponseEntity<List<EventResponseDTO>> getEvents() {
@@ -43,5 +46,11 @@ public class EventController {
     var uri = uriComponentsBuilder.path("/events/{id}").buildAndExpand(createdEvent.eventId()).toUri();
 
     return ResponseEntity.created(uri).body(createdEvent);
+  }
+
+  @GetMapping("/attendees/{id}")
+  public ResponseEntity<AttendeesListResponseDTO> getEventAttendees(@PathVariable String id) {
+    var events = this.attendeeService.getEventsAttendee(id);
+    return ResponseEntity.ok().body(events);
   }
 }

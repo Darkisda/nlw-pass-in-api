@@ -11,7 +11,6 @@ import com.example.passin.domain.event.exceptions.EventNotFoundException;
 import com.example.passin.dto.event.EventIdDTO;
 import com.example.passin.dto.event.EventRequestDTO;
 import com.example.passin.dto.event.EventResponseDTO;
-import com.example.passin.repositories.AttendeeRepository;
 import com.example.passin.repositories.EventRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -20,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class EventService {
   private final EventRepository eventRepository;
-  private final AttendeeRepository attendeeRepository;
+  private final AttendeeService attendeeService;
 
   public List<EventResponseDTO> getEvents() {
     var events = this.eventRepository.findAll();
@@ -32,7 +31,7 @@ public class EventService {
   public EventResponseDTO getEventDetails(String eventId) {
     var event = this.eventRepository.findById(eventId)
         .orElseThrow(() -> new EventNotFoundException("Event not found with ID: " + eventId));
-    var attendeeList = this.attendeeRepository.findByEventId(eventId);
+    var attendeeList = this.attendeeService.getAllAttendeesFromEvent(eventId);
     return new EventResponseDTO(event, attendeeList.size());
   }
 

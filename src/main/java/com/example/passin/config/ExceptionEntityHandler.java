@@ -10,7 +10,7 @@ import com.example.passin.domain.event.exceptions.EventNotFoundException;
 public class ExceptionEntityHandler {
 
   @ExceptionHandler(EventNotFoundException.class)
-  public ResponseEntity handleEventNotFound(EventNotFoundException exception) {
+  public ResponseEntity<Object> handleEventNotFound(EventNotFoundException exception) {
     return ResponseEntity.notFound().build();
   }
 }
