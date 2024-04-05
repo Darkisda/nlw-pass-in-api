@@ -16,7 +16,6 @@ import com.example.passin.dto.attendee.AttendeeBadgeResponseDTO;
 import com.example.passin.dto.attendee.AttendeeDetailsDTO;
 import com.example.passin.dto.attendee.AttendeesListResponseDTO;
 import com.example.passin.repositories.AttendeeRepository;
-import com.example.passin.repositories.CheckinRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AttendeeService {
   private final AttendeeRepository repository;
-  private final CheckinRepository checkinRepository;
+  private final CheckInService checkInService;
 
   public List<Attendee> getAllAttendeesFromEvent(String eventId) {
     return this.repository.findByEventId(eventId);
@@ -33,7 +32,7 @@ public class AttendeeService {
   public AttendeesListResponseDTO getEventsAttendee(String eventId) {
     List<Attendee> attendees = this.getAllAttendeesFromEvent(eventId);
     List<AttendeeDetailsDTO> attendeeDtos = attendees.stream().map(attendee -> {
-      Optional<Checkin> checkin = this.checkinRepository.findByAttendeeId(attendee.getId());
+      Optional<Checkin> checkin = this.checkInService.getCheckIn(attendee.getId());
       LocalDateTime checkedInAt = checkin.<LocalDateTime>map(Checkin::getCreatedAt).orElse(null);
       return new AttendeeDetailsDTO(attendee.getId(), attendee.getName(), attendee.getEmail(), attendee.getCreatedAt(),
           checkedInAt);
@@ -53,12 +52,21 @@ public class AttendeeService {
   }
 
   public AttendeeBadgeResponseDTO getAttendeeBadge(String attendeeId, UriComponentsBuilder uriComponentsBuilder) {
-    var attendee = this.repository.findById(attendeeId)
-        .orElseThrow(() -> new AttendeeNotFoundException("Attendee not found"));
+    var attendee = this.getAttendeeById(attendeeId);
 
     var uri = uriComponentsBuilder.path("/attendees/{attendeeId}/check-in").buildAndExpand(attendeeId).toString();
 
     return new AttendeeBadgeResponseDTO(
         new AttendeeBadgeDTO(attendee.getName(), attendee.getEmail(), uri, attendee.getEvent().getId()));
+  }
+
+  public void checkInAttendee(String attendeeId) {
+    var attendee = this.getAttendeeById(attendeeId);
+    this.checkInService.registerCheckIn(attendee);
+  }
+
+  private Attendee getAttendeeById(String attendeeId) {
+    return this.repository.findById(attendeeId)
+        .orElseThrow(() -> new AttendeeNotFoundException("Attendee not found"));
   }
 }
