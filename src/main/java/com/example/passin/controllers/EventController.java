@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.example.passin.dto.attendee.AttendeeIdDTO;
+import com.example.passin.dto.attendee.AttendeeRequestDTO;
 import com.example.passin.dto.attendee.AttendeesListResponseDTO;
 import com.example.passin.dto.event.EventIdDTO;
 import com.example.passin.dto.event.EventRequestDTO;
@@ -28,7 +30,7 @@ public class EventController {
   private final AttendeeService attendeeService;
 
   @GetMapping
-  public ResponseEntity<List<EventResponseDTO>> getEvents() {
+  public ResponseEntity<List<EventIdDTO>> getEvents() {
     var response = this.service.getEvents();
     return ResponseEntity.ok().body(response);
   }
@@ -37,6 +39,12 @@ public class EventController {
   public ResponseEntity<EventResponseDTO> getEvent(@PathVariable String id) {
     var event = this.service.getEventDetails(id);
     return ResponseEntity.ok().body(event);
+  }
+
+  @GetMapping("/attendees/{id}")
+  public ResponseEntity<AttendeesListResponseDTO> getEventAttendees(@PathVariable String id) {
+    var events = this.attendeeService.getEventsAttendee(id);
+    return ResponseEntity.ok().body(events);
   }
 
   @PostMapping
@@ -48,9 +56,12 @@ public class EventController {
     return ResponseEntity.created(uri).body(createdEvent);
   }
 
-  @GetMapping("/attendees/{id}")
-  public ResponseEntity<AttendeesListResponseDTO> getEventAttendees(@PathVariable String id) {
-    var events = this.attendeeService.getEventsAttendee(id);
-    return ResponseEntity.ok().body(events);
+  @PostMapping("/{eventId}/attendees")
+  public ResponseEntity<AttendeeIdDTO> registerParticipant(@PathVariable String eventId,
+      @RequestBody AttendeeRequestDTO attendeeRequestDTO, UriComponentsBuilder uriComponentsBuilder) {
+    var response = this.service.registerAttendeeOnEvent(eventId, attendeeRequestDTO);
+    var uri = uriComponentsBuilder.path("/attendees/{attendeeId}/badge").buildAndExpand(response.attendeeId()).toUri();
+
+    return ResponseEntity.created(uri).body(response);
   }
 }

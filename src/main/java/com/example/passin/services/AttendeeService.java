@@ -5,9 +5,14 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.example.passin.domain.attendee.Attendee;
+import com.example.passin.domain.attendee.exceptions.AttendeeAlreadyExistException;
+import com.example.passin.domain.attendee.exceptions.AttendeeNotFoundException;
 import com.example.passin.domain.checkin.Checkin;
+import com.example.passin.dto.attendee.AttendeeBadgeDTO;
+import com.example.passin.dto.attendee.AttendeeBadgeResponseDTO;
 import com.example.passin.dto.attendee.AttendeeDetailsDTO;
 import com.example.passin.dto.attendee.AttendeesListResponseDTO;
 import com.example.passin.repositories.AttendeeRepository;
@@ -34,5 +39,26 @@ public class AttendeeService {
           checkedInAt);
     }).toList();
     return new AttendeesListResponseDTO(attendeeDtos);
+  }
+
+  public Attendee registerAttendee(Attendee newAttendee) {
+    this.repository.save(newAttendee);
+    return newAttendee;
+  }
+
+  public void verifyAttendeeSubscription(String eventId, String email) {
+    var isAttendeeRegistered = this.repository.findByEventIdAndEmail(eventId, email);
+    if (isAttendeeRegistered.isPresent())
+      throw new AttendeeAlreadyExistException("Attendee already registered");
+  }
+
+  public AttendeeBadgeResponseDTO getAttendeeBadge(String attendeeId, UriComponentsBuilder uriComponentsBuilder) {
+    var attendee = this.repository.findById(attendeeId)
+        .orElseThrow(() -> new AttendeeNotFoundException("Attendee not found"));
+
+    var uri = uriComponentsBuilder.path("/attendees/{attendeeId}/check-in").buildAndExpand(attendeeId).toString();
+
+    return new AttendeeBadgeResponseDTO(
+        new AttendeeBadgeDTO(attendee.getName(), attendee.getEmail(), uri, attendee.getEvent().getId()));
   }
 }
